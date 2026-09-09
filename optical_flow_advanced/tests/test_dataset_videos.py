@@ -176,3 +176,78 @@ def test_temporal_window_does_not_drop_or_cross_frames(modules, tmp_path, monkey
     assert report['frames'] == 5
     assert [values[1:] for values in calls if values[0]] == [(10, 10, 20), (10, 20, 30), (20, 30, 40), (30, 40, 50), (40, 50, 50)]
     assert author_calls == [(10, 10, 30), (10, 20, 40), (10, 30, 50), (20, 40, 50), (30, 50, 50)]
+
+
+def test_video_declared_frame_overcount_uses_decodable_length(modules, tmp_path, monkeypatch):
+    worker = modules[0]
+    source = tmp_path / 'overcounted.mp4'
+    source.touch()
+    frames = [np.full((18, 32, 3), (number + 1) * 10, np.uint8) for number in range(5)]
+
+    class FakeCapture:
+        def __init__(self, path):
+            self.index = 0
+
+        def isOpened(self):
+            return True
+
+        def get(self, key):
+            return 7 if key == cv2.CAP_PROP_FRAME_COUNT else 30
+
+        def read(self):
+            if self.index >= len(frames):
+                return False, None
+            frame = frames[self.index]
+            self.index += 1
+            return True, frame
+
+        def release(self):
+            pass
+
+    finalized = []
+
+    class FakeWriter:
+        def __init__(self, *args):
+            self.process = SimpleNamespace(pid=0)
+
+        def write(self, image):
+            assert image.shape[:2] == (1080, 1920)
+
+        def close(self):
+            pass
+
+        def finalize(self, ffprobe, expected_frames):
+            finalized.append(expected_frames)
+            return {'path': 'test-only', 'bytes': 0}
+
+        def abort(self):
+            pass
+
+    method = SimpleNamespace(
+        compensated_difference=lambda previous, center, following, parameters, local:
+            (np.zeros(center.shape, np.float32), np.full(center.shape, 255, np.uint8), {}),
+        adaptive_residual=lambda difference, *args: difference.astype(np.uint8),
+    )
+    monkeypatch.setattr(worker.cv2, 'VideoCapture', FakeCapture)
+    monkeypatch.setattr(worker, 'load_methods', lambda manifest: (method, None))
+    monkeypatch.setattr(worker, 'legacy_difference', lambda previous, center, following, compensate:
+                        (np.zeros(center.shape[:2], np.uint8), np.full(center.shape[:2], 255, np.uint8)))
+    monkeypatch.setattr(worker, 'VideoWriter', FakeWriter)
+    manifest = {
+        'source_hashes': {}, 'output_root': str(tmp_path / 'output'), 'run_dir': str(tmp_path),
+        'opencv_threads': 1,
+        'parameters': {'adaptive_strength': 1.2, 'residual_floor': 2, 'residual_gain': 1.2},
+        'ffmpeg': '', 'ffprobe': '', 'display_gain': 3, 'metric_stride': 30,
+        'sequences': [{'id': 'ARD/test/sample', 'dataset': 'ARD', 'split': 'test', 'name': 'sample',
+                       'kind': 'video', 'source': str(source), 'stage_source': False,
+                       'original_reference': 'test'}],
+    }
+    manifest_path = tmp_path / 'manifest.json'
+    manifest_path.write_text(json.dumps(manifest))
+
+    report = worker.process_sequence(manifest_path, 'ARD/test/sample')
+
+    assert report['frames'] == report['source_frames'] == 5
+    assert report['declared_source_frames'] == 7
+    assert report['decoded_frame_count_adjusted'] is True
+    assert finalized == [5, 5, 5]

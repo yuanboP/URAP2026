@@ -256,6 +256,7 @@ def process_sequence(manifest_path, sequence_id, max_frames=0, preview_root=None
             fps = sequence['fps']
         if source_total < 1 or fps <= 0:
             raise ValueError('Invalid source frame count or FPS')
+        declared_source_total = source_total
         total = min(source_total, max_frames) if max_frames else source_total
         writer_specs = [('new_motion.mp4', True), ('original_fd5.mp4', True), ('comparison.mp4', False)]
         for name, gray in writer_specs:
@@ -271,7 +272,14 @@ def process_sequence(manifest_path, sequence_id, max_frames=0, preview_root=None
                 if capture is not None:
                     success, frame = capture.read()
                     if not success:
-                        raise RuntimeError(f'Unexpected source EOF at frame {next_read}/{source_total}')
+                        if next_read == 0:
+                            raise RuntimeError(f'Video declares {declared_source_total} frames but none can be decoded')
+                        previous_total = source_total
+                        source_total = next_read
+                        total = min(source_total, max_frames) if max_frames else source_total
+                        print(f'{timestamp()} DECODED_FRAME_COUNT_ADJUSTED declared={previous_total} actual={source_total}',
+                              flush=True)
+                        break
                 else:
                     frame = cv2.imread(sequence['frames'][next_read])
                     if frame is None:
@@ -282,6 +290,8 @@ def process_sequence(manifest_path, sequence_id, max_frames=0, preview_root=None
                     raise RuntimeError('Source image dimensions changed within sequence')
                 cache[next_read] = letterbox(frame, 1920, 1080)
                 next_read += 1
+            if frame_index >= total:
+                break
             get_frame = lambda offset: cache[max(0, min(source_total - 1, frame_index + offset))][0]
             rgb, content_valid = cache[frame_index]
             gray_frames = [cv2.cvtColor(get_frame(offset), cv2.COLOR_BGR2GRAY) for offset in (-1, 0, 1)]
@@ -344,7 +354,9 @@ def process_sequence(manifest_path, sequence_id, max_frames=0, preview_root=None
         outputs = [writer.finalize(manifest['ffprobe'], total) for writer in writers]
         report = {'status': 'completed', 'sequence': sequence_id, 'dataset': sequence['dataset'],
                   'split': sequence['split'], 'started_at': started, 'completed_at': timestamp(),
-                  'frames': total, 'source_frames': source_total, 'preview_only': bool(max_frames),
+                  'frames': total, 'source_frames': source_total, 'declared_source_frames': declared_source_total,
+                  'decoded_frame_count_adjusted': source_total != declared_source_total,
+                  'preview_only': bool(max_frames),
                   'fps': fps, 'source_shape': source_shape, 'output_shape': [1080, 1920], 'outputs': outputs,
                   'original_reference': sequence['original_reference'], 'author_reference_failed_frames': sum(failures.values()),
                   'metric_scope': 'Image-wide valid-region residual intensity; NOT detection AP or GT-based background/target preservation.',
