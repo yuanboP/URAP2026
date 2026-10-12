@@ -1,0 +1,16 @@
+task_id,title,owner_role,depends_on,priority,status,details_file
+T00,Build a clean reproducible environment,Training engineering,None,P0,PLANNED,01_TASKS.md
+T01,Acquire and verify required data,Data,May run with T00,P0,PLANNED,01_TASKS.md
+T02,Freeze splits and annotation reliability,Data and independent evaluation,T01,P0,PLANNED,01_TASKS.md
+T03,Validate and freeze the motion-residual input,Training engineering,T01 and T02,P0,PLANNED,01_TASKS.md
+T04,Implement unified training and evaluation entry point,Training engineering,T00 and T02 and T03,P0,PARTLY_IMPLEMENTED_REFERENCE_ADAPTER_PENDING,01_TASKS.md
+T05,Run smoke tests and new-run interruption drill,Training engineering,T04,P0,PLANNED,01_TASKS.md
+T06,Train the fair YOLO A/B comparison,Training engineering,T05,P0,PLANNED,01_TASKS.md
+T07,Train the prompt-conditioned SAM2 refiner,SAM2 and training engineering,T02 and T05,P0,REFERENCE_EXISTS_FRESH_REPRODUCTION_REQUIRED,01_TASKS.md
+T08,Implement SAM2-feature candidate classification and box refinement,SAM2 research,T02 and T06 and T07,P1,TO_IMPLEMENT,01_TASKS.md
+T09,Lock models and run fair evaluation,Independent evaluation,T06 and T07; add T08 after completion,P0,PLANNED,01_TASKS.md
+T10,Run controlled motion and SAM ablations,Research and evaluation,T09,P1,PLANNED,01_TASKS.md
+T11,Deliver models and reproducible report,Training and evaluation,T09 and applicable T10 arms,P0,PLANNED,01_TASKS.md
+T12,Integrate frozen detector/refiner into video tracking,Tracking engineering,T11,P1 FOLLOW_ON,TO_IMPLEMENT,08_TRACKING_INTEGRATION.md
+T13,Add loss reacquisition and memory safety controls,Tracking research,T12,P1 FOLLOW_ON,TO_IMPLEMENT,08_TRACKING_INTEGRATION.md
+T14,Run sequential tracking evaluation,Independent tracking evaluation,T12 and T13,P1 FOLLOW_ON,PROPOSED,08_TRACKING_INTEGRATION.md

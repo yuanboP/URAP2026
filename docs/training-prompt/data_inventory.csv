@@ -1,0 +1,12 @@
+dataset_or_artifact,use,records,videos,logical_asset_path,availability_snapshot_2026_10_11,verify_on_receipt,notes
+Legacy full train,full-training candidate planning inventory,107561,53,external_assets/legacy,separate asset delivery,required,"Planning count only: ARD100=105957; DJI=1604; positives=107032; certified negatives=529; rebuild and audit a fresh manifest before training"
+Legacy source-validation candidate pool,rebuild full audited validation,,14,external_assets/legacy,separate asset delivery,required,"Use all audited eligible validation frames from the 14 videos; keep them disjoint from the 53 training videos"
+NewDJI28 all positive rows,source inventory for fresh manifest generation,13358,25,external_assets/newdji28,separate asset delivery,required,"2026-10-11 audit: train=6967/11 videos; validation=3893/9; test=2498/5; 3 zero-positive videos excluded; regenerate and audit manifests"
+NewDJI28 triplet-eligible train,full-training candidate planning inventory,6956,11,external_assets/newdji28/raw,separate transfer or authorized Drive,required,"Planning count only after prior triplet-boundary filtering; regenerate and audit the fresh training manifest"
+New annotation archive,box annotation source,14276,28,external_assets/annotations/annotations_2607.zip,separate asset delivery,required,"424042 bytes; SHA-256 dcfcb9c1a79ceecf39b127e57abe03ba13ec73c602571147687267b450f69e4a; 13373 boxes; 918 unresolved empty-box rows"
+ARD100 raw/source domain,training and evaluation candidate,,,external_assets/public/ARD100,separate transfer,required,"100 videos and 39881779194 bytes in the 2026-10-11 audit; previous development exposure"
+Anti-UAV300,cross-domain candidate,,,external_assets/public/Anti-UAV300,separate transfer,required,"previous development exposure; not an untouched test set"
+NPS Drone Detection,cross-domain candidate,,,external_assets/public/Drone-detection-dataset,separate transfer,required,"previous development exposure"
+AOT pools,training or cross-domain candidate,,,external_assets/public/AOT_train_adapt_pool_v2,separate transfer,required,"previous training/evaluation exposure"
+TransVisDrone/NPS,training or cross-domain candidate,,,external_assets/public/TransVisDrone_NPS,separate transfer,required,"previous training/evaluation exposure"
+TriCross-D2D,cross-domain candidate,,,external_assets/public/TriCross-D2D,separate transfer,required,"previous development exposure"

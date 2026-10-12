@@ -1,0 +1,4 @@
+name,use,logical_source,expected_bytes,expected_sha256,included_in_git,verify_on_receipt,notes
+official_yolo11m,generic pretrained initialization,official Ultralytics YOLO11m release,,,no,required,"Acquire through the official model-loading flow; record upstream release URL, license, bytes, and SHA-256 before initialization"
+official_sam2_1_hiera_large,generic pretrained teacher initialization,official Meta SAM 2.1 release,,,no,required,"Acquire from the official release; record exact URL, license, bytes, and SHA-256 in the new run contract"
+official_sam2_1_hiera_tiny,generic pretrained student initialization,official Meta SAM 2.1 release,,,no,required,"Acquire from the official release; record exact URL, license, bytes, and SHA-256 in the new run contract"

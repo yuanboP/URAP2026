@@ -1,0 +1,94 @@
+# Fresh experiment specification; not an executable trainer configuration.
+# T00/T04 implement and validate the adapter. Paths are examples to resolve locally.
+project: urap_drone_detection_fresh
+schema_status: pending_T00_T04_adapter
+
+runtime:
+  device: cuda
+  work_root: /workspace/urap
+  num_workers_reference: 2
+
+data:
+  asset_root: /workspace/urap/external_assets
+  # The following asset paths are relative to asset_root.
+  annotation_archive: annotations/annotations_2607.zip
+  newdji_raw_root: newdji28/raw
+  legacy_root: legacy
+  public_root: public
+  train_manifest: null
+  validation_manifest: null
+  test_manifest: null
+  split_unit: capture_group_or_original_video
+  reject_unreviewed_empty_boxes: true
+
+models:
+  detector_architecture: YOLO11m-P2
+  yolo_initialization: official_yolo11m
+  sam_teacher_initialization: official_sam2_1_hiera_large
+  sam_student_initialization: official_sam2_1_hiera_tiny
+  reuse_domain_trained_checkpoints: false
+  detector_input_size: 1280
+  detector_arms: [A_RGB, B_RGBD_input]
+  motion_input_definition: compensated_symmetric_grayscale_residual_D_div_255
+  added_stem_channel_initialization: zero
+  sam_trainable_components: [sam_mask_decoder]
+  candidate_detection_head: pending_T08
+
+motion:
+  grid_cols: 36
+  grid_rows: 21
+  neighbors: 18
+  radius: 190
+  max_shift: 18
+  local_apply_threshold: 0.18
+  track_scale: 0.5
+  texture_suppression_in_primary_B: false
+  lookahead_frames: 1
+  invalid_pixel_value: 0
+  failure_policy: retain_RGB_set_D_zero_log_event
+
+training:
+  primary_seed: 17
+  additional_registered_seeds: [23, 41]
+  seeds_required_for_multiseed_claim: [17, 23, 41]
+  max_optimizer_steps: null  # Freeze before the first optimization step; match A/B.
+  microbatch_reference: 4
+  gradient_accumulation_reference: 2
+  yolo_peak_lr_reference: 0.0002
+  checkpoint_every_optimizer_steps: 100
+  checkpoint_max_seconds: 240
+  checkpoint_selection_split: source_validation
+  restore_only_same_run_identity: true
+
+sam:
+  official_commit: 2b90b9f5ceec907a1c18123530e92e794ad901a4
+  teacher_training_samples: all_eligible_training_boxes
+  teacher_min_score_reference: 0.70
+  crop_min_side_reference: 256
+  crop_box_scale_reference: 6.0
+  student_input_size: 1024
+  student_learning_rate_reference: 0.00001
+  student_epochs_reference: 5
+  checkpoint_every_steps: 25
+  video_memory_training: false
+  inference_prompt_source: automatic_detector_boxes
+
+evaluation:
+  checkpoint_selection_split: source_validation
+  threshold_selection_split: source_validation
+  bbox_iou_operating_point: 0.5
+  confidence_floor: 0.001
+  nms_iou: 0.7
+  coco_max_dets: [1, 10, 100]
+  bootstrap_unit: video_or_capture_group
+  bootstrap_replicates: 2000
+  allow_ground_truth_prompts_in_detection_test: false
+  sam_refine_top_k_reference: 10
+  report_per_domain_and_video: true
+
+tracking_extension:
+  implementation_tasks: [T12, T13, T14]
+  enabled_in_training_core: false
+  reference_tracker: ConstantVelocityTracker
+  memory_and_action_bank: separate_validated_ablations
+  require_complete_sequence_labels_for_tracking_claims: true
