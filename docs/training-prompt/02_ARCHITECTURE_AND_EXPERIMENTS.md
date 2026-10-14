@@ -17,12 +17,12 @@ flowchart TD
   S --> M[Frozen or decoder-adapted mask decoder]
   M --> R[Mask-to-box conditional refinement]
   BOX --> R
-  S -. T08 to implement .-> H[Drone classifier and box regressor]
+  S -. Optional T08 proposal head .-> H[Drone classifier and box regressor]
   H -.-> R
   R --> O[Box, drone score, optional mask]
 ```
 
-Only YOLO consumes RGBD. SAM2 consumes center-frame RGB so the primary comparison does not change two modalities at once. SAM2 mask-quality or predicted-IoU output estimates segmentation quality; it is not a drone-class probability. Any use in ranking must have a source-validation-calibrated formula. The T08 classifier is the proposed source of explicit drone/background supervision.
+Only YOLO consumes RGBD. SAM2 consumes center-frame RGB so the primary comparison does not change two modalities at once. SAM2 mask-quality or predicted-IoU output estimates segmentation quality; it is not a drone-class probability. Any use in ranking must have a source-validation-calibrated formula. The optional T08 classifier supplies explicit drone/background supervision; its implementation is available in `drone_training/sam_head.py`, and its proposal protocol and scientific evaluation remain to be executed.
 
 The motion channel is a compensated brightness residual, not a dense optical-flow-vector tensor. Let the two neighboring grayscale frames be warped to `t`. Then
 
@@ -70,7 +70,7 @@ At primary validation and deployment, only automatic detector boxes may prompt S
 
 T08 proposes ROI/box features from the SAM2 RGB representation followed by a binary drone/background head and a box-regression head. Start with a frozen image encoder. Candidate objectives may use BCE/Focal classification plus L1/GIoU regression, with mask loss as an optional auxiliary. Loss weights, ROI scale, and adapter/LoRA use are source-validation hyperparameters.
 
-A preregisterable starting match is IoU ≥ **0.5** positive, IoU ≤ **0.3** negative, and intermediate IoU ignored. Only exhaustive training frames or reviewed negatives may supply background labels. On partial frames, unmatched proposals are unknown and must be ignored.
+A preregisterable starting match is IoU ≥ **0.5** positive, IoU < **0.3** negative, and intermediate IoU ignored. Only exhaustive training frames or reviewed negatives may supply background labels. On partial frames, unmatched proposals are unknown and must be ignored.
 
 Generate training proposals with video-level K-fold cross-fitting so the proposal model did not train on the current fold's video. All fold models share the same base initialization. A disjoint proposal-training/head-training split is acceptable when disclosed, but it reduces data efficiency. Without an independently trained proposal/objectness module, this head does not make SAM2 a standalone detector.
 

@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-14",
+  "scope": "bounded_engineering_verification_not_formal_training",
+  "automated_tests_passed": 61,
+  "reference_components_unchanged": 11,
+  "environment": {
+    "os": "Windows",
+    "python": "3.14",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER",
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "ultralytics": "8.4.51",
+    "pycocotools": "2.0.11"
+  },
+  "data": {
+    "repo_id": "Tyler0918/urap2026-drone-training",
+    "revision": "aaf817f51dd670579a8e2c30a5db4930cf5eeb7f",
+    "train_frames": 8,
+    "validation_frames": 4,
+    "verified_videos": 7,
+    "nonzero_motion_samples": 12,
+    "motion_fallbacks": 0,
+    "split_video_overlap": 0
+  },
+  "yolo": {
+    "stopped_step": 2,
+    "resumed_step": 4,
+    "control_step": 4,
+    "presentation_digest_equal": true,
+    "precision": "bfloat16",
+    "arms": {
+      "A": {
+        "max_abs_resumed_vs_control": 0.0,
+        "tensors_changed_step2_to_step4": 802,
+        "reload_evaluation_frames": 4
+      },
+      "B": {
+        "max_abs_resumed_vs_control": 0.0,
+        "tensors_changed_step2_to_step4": 802,
+        "reload_evaluation_frames": 4
+      }
+    },
+    "scientific_claim": false,
+    "note": "Comparison uses four validation smoke frames solely to verify code; these are not test results.",
+    "code_sha256": {
+      "cli.py": "52c1fd7eef8d8de3027cf077ffb7bc58cd22a5b836d86e4c28ba5a9ad56af871",
+      "data.py": "9c371ff96c0a69f627f16c1bec3de12d20d1b3f126f78f7062c647d1cb42c894",
+      "download.py": "818e582632f703f1e2899652a6d7d96236f64b6915ee5a82df8c24c51c24bca5",
+      "evaluation.py": "e4fd43d9b94fc87017182b416a016bdfebc8fca03687822bf7b3438aed4e16b7",
+      "models.py": "e9393918f422f520d0ac4666852420804b66212333131d1f81fe36e999cd406d",
+      "sam.py": "07a98b4ee362fa541d6a1b7c550b4fb9e5e1f17032779016aa5b9552dee01a10",
+      "sam_head.py": "21ca65abf5ef69ff4a46f61fcac2149da4467775564c9b5a827db648d40a1e2d",
+      "trainer.py": "ceea63a9d0b4d700775d1824f509e09e76affa1b0b25ad5620c3b0472a723ff4",
+      "__init__.py": "2ed1e3292c74edf949640dd9edaafe3c808948f89185e10958bba3e00d064273",
+      "__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
+    }
+  },
+  "sam": {
+    "status": "decoder_and_engineering_head_smoke_complete",
+    "teacher_selected": 7,
+    "teacher_accepted": 6,
+    "teacher_rejected": 1,
+    "decoder_initial_stop_step": 1,
+    "decoder_resumed_final_step": 6,
+    "decoder_checkpoint": "decoder_final/last.pt",
+    "sam_module_sha256": "07a98b4ee362fa541d6a1b7c550b4fb9e5e1f17032779016aa5b9552dee01a10",
+    "decoder_embedded_source_sha256": "07a98b4ee362fa541d6a1b7c550b4fb9e5e1f17032779016aa5b9552dee01a10",
+    "decoder_source_hash_match": true,
+    "adapter_graph_version": "sam2_image_predictor_feature_parity_v2",
+    "no_mem_embed_training_inference_parity": true,
+    "decoder_tensor_count": 131,
+    "decoder_tensors_changed_from_official_base": 121,
+    "strict_reload_inference_mask_pixels": 418,
+    "predicted_mask_quality": 0.8812986612319946,
+    "score_semantics": "sam_predicted_mask_quality_not_drone_confidence",
+    "head_fixture_semantics": "artificial proposals with real SAM2 features for engineering reload test only",
+    "head_checkpoint": "head_final/last.pt",
+    "head_checkpoint_step": 4,
+    "head_positive_count": 1,
+    "head_negative_count": 1,
+    "head_tensor_count": 8,
+    "head_tensors_changed": 8,
+    "head_reload_scores": [
+      0.5397740602493286,
+      0.45425769686698914
+    ],
+    "sam_head_module_sha256": "21ca65abf5ef69ff4a46f61fcac2149da4467775564c9b5a827db648d40a1e2d",
+    "head_embedded_feature_pipeline_sha256": "21ca65abf5ef69ff4a46f61fcac2149da4467775564c9b5a827db648d40a1e2d",
+    "head_checkpoint_matches_current_source": true,
+    "head_validation_device": "cpu",
+    "cli_entrypoints_verified": [
+      "sam-train stop-after",
+      "sam-train resume",
+      "sam-train completed-resume",
+      "sam-infer"
+    ],
+    "cli_infer_mask_pixels": 418,
+    "scientific_claim": false
+  },
+  "full_training_executed": false,
+  "h100_training_executed": false
+}

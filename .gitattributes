@@ -1,0 +1,4 @@
+# Keep training source hashes stable across Windows and Linux checkouts.
+drone_training/** text eol=lf
+tests/test_drone_training_*.py text eol=lf
+requirements-training.txt text eol=lf

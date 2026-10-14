@@ -2,13 +2,14 @@
 
 URAP2026 is the lightweight research workspace for UAV small-object detection experiments.
 
-The **fresh training project** is specified in [Training tasks and prompts](docs/training-prompt/README.md). It covers RGB/motion-input YOLO, SAM2 drone adaptation, controlled experiments, and the follow-on video-tracking integration tasks.
+The **fresh training project** has executable [full-data training commands](docs/training-prompt/00_QUICKSTART.md) and a [copyable colleague prompt](docs/training-prompt/05_PROMPTS.md). Run `python -m drone_training --help` for pinned Hugging Face data import, matched RGB/RGBD YOLO11m-P2 training, SAM2 Tiny decoder adaptation, recovery and evaluation. [Training tasks and scope](docs/training-prompt/README.md) distinguish these model-training paths from the separate video-tracking work.
 
 The current active prototype is **QSTR-DroneDet**: a quality-aware, two-stage tiny drone detection and recognition scaffold. It separates candidate generation from recognition so experiments can diagnose whether a miss came from proposal failure, recognition failure, motion alignment failure, feature loss, or weak single-frame evidence.
 
 This repository intentionally tracks:
 
 - QSTR-DroneDet source code in `qstr_dronedet/`
+- portable model training and evaluation in `drone_training/`
 - synthetic/unit tests in `tests/`
 - empty data templates in `data_templates/`
 - experiment and reproduction notes in `doc/`

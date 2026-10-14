@@ -1,83 +1,54 @@
-# Data handoff for the new training project
+# Data contract
 
-Snapshot date: **2026-10-11**. This document records the dataset inventory known on that date. It does not guarantee that any cloud object remains available today.
+## Pinned public release
 
-## What is and is not in this repository
+Use Hugging Face dataset `Tyler0918/urap2026-drone-training` at immutable revision `aaf817f51dd670579a8e2c30a5db4930cf5eeb7f`. The CLI downloads `release_v3_curated/metadata.zip`, verifies its 78,781,652 bytes and SHA256 `58d4dc1084ba1281d121c93db4186e27491edd3192db9384da3771b95a3d12ac`, safely extracts it, verifies indexed members, and downloads only selected video objects by SHA.
 
-This public Git branch contains reference code, documentation, and inventory files. It does **not** contain raw videos, raw annotations, generated manifests, model checkpoints, or presentation exports. The project owner delivers the authorized original annotations, labels, and dataset assets separately. Mount those assets under the logical roots below before running preparation code. GitHub alone is insufficient to reproduce the datasets.
+| Source family | Retained videos | Role |
+|---|---:|---|
+| ARD100 | 100 | Train, validation, and test on disjoint videos |
+| Historical DJI | 4 | Train, validation, and test on disjoint videos |
+| NewDJI | 22 | Curated subset of the historical 28-video catalog |
+| Total | 126 | Mixed-source held-out-video release |
 
-The annotation archive is referenced by the portable ASCII alias `external_assets/annotations/annotations_2607.zip`. Its original snapshot metadata is:
+The retained videos total 96,376,789,379 bytes. This is payload size, not total workspace capacity. Metadata extraction, a bounded motion cache, pseudo masks, weights, checkpoints, predictions, and evaluation outputs need additional space. Choose explicit caps and monitor free space.
 
-- 424,042 bytes
-- SHA-256 `dcfcb9c1a79ceecf39b127e57abe03ba13ec73c602571147687267b450f69e4a`
-- 28 JSON files
-- 14,276 annotation records, including 13,373 drone boxes and 918 empty-box records
+The original NewDJI catalog contains 28 videos. Six were excluded by curation. Preserve that historical catalog and its provenance, but do not describe it as the current 126-video payload. Anti-UAV and NPS are not distributed in this release and are not part of the default formal evaluation.
 
-Verify the archive size and hash after receipt.
+## Canonical records
 
-## NewDJI28
+| Manifest | Records | Intended use |
+|---|---:|---|
+| `flow_train_common.jsonl` | 115,675 | Matched YOLO A/B training; every row has a valid triplet |
+| `detection_train_complete.jsonl` | 115,749 | Complete curated training inventory |
+| `validation.jsonl` | 26,424 | All curated validation detection records |
+| `flow_validation.jsonl` | 26,399 | Motion-eligible source validation used by matched RGB/RGBD evaluation |
+| `test.jsonl` | 76,257 | All curated test detection records |
+| `flow_test.jsonl` | 76,211 | Motion-eligible formal test after all settings are frozen |
+| `sam_positive_train.jsonl` | 114,025 | Positive-only box prompts for pseudo masks |
 
-The authorized Google Drive discovery folder was:
+Canonical decoder indices are zero-based. `source_annotation_frame_id` and `source_frame_index_base` preserve annotation provenance and must never be subtracted from `source_frame_id`. Motion rows require `[t-1,t,t+1]` exactly and must remain within video bounds.
 
-- Folder: https://drive.google.com/drive/folders/1N1TRgMt608bJXheu3Y9W6V5qVEX9QEai
-- Folder ID: `1N1TRgMt608bJXheu3Y9W6V5qVEX9QEai`
+Each record preserves sample ID, source domain, sequence, source SHA, path, dimensions, frame count/rate, split, role, box coordinates, class IDs, motion eligibility, and completeness/provenance fields. `bbox_xyxy` is in original pixels and class `0` is drone.
 
-The 2026-10-11 catalog recorded 28 raw MP4 files totaling **79,333,410,303 bytes (73.885 GiB)** and 28 compensated-difference visualization MP4 files. Those visualizations are diagnostic media; they are not defined numerical motion tensors and must not replace raw-video decoding or motion-feature generation.
+An empty record is usable only when `role` is `negative_certified`. Unreviewed empty NewDJI annotations are unknown and excluded from negative supervision. A positive box does not certify all background regions on an incomplete frame.
 
-Use the individual Drive file IDs in `new_video_inventory.csv`, then verify each received file against the catalog byte count and any recorded SHA-256. A folder listing is only a discovery aid and may drift.
+## Partition meaning
 
-The frozen capture-date split is:
+Train, validation, and test are separated by source-video SHA. This prevents neighboring-frame and derivative leakage. Because every split contains a mixture of source families, the default result measures held-out videos within a mixed ARD/DJI corpus. It must not be labeled strict cross-domain generalization.
 
-| Capture group | Split |
-|---|---|
-| 20260626 and 20260706 | train |
-| 20260702 | validation |
-| 20260704 | test |
+Validation selects checkpoints, thresholds, and allowed protocol settings. Test is read only after those decisions are frozen. Any external-domain study needs its own preregistered manifest, provenance, licensing check, and exclusion from training/tuning.
 
-Positive-record totals are train **6,967** across 11 videos, validation **3,893** across 9 videos, and test **2,498** across 5 videos, for **13,358** positive records. The 2026-10-11 audit found **6,956** triplet-eligible training rows. Treat this as a planning count and re-audit it when generating fresh manifests. Three additional videos (003, 013, and 016) have zero positive annotations and are excluded from those positive-row counts.
+## Full and smoke downloads
 
-Use the complete audited training split for the fresh project. If a smoke-test subset is needed, generate it anew from the training split and record its sampling method and seed; do not inherit an earlier reduced selection.
+The default `download` command materializes all 126 retained videos and canonical metadata. `--smoke --train-limit 8 --val-limit 4` writes deterministic balanced subset manifests outside the canonical directory. The smoke selection spans available source domains and includes a certified negative when possible. Smoke data verify integration only and cannot support performance conclusions.
 
-Only 222 annotations were marked reviewed, all from video 007 and one capture date. Treat precision and recall on these labels as provisional. The 918 empty-box records from 007 have unresolved semantics; do not treat them as certified negatives. Do not treat the three zero-positive videos as negative videos without a separate label audit.
+Inspect `download_receipt.json` or `download_receipt_smoke.json` and `download_progress.jsonl`. A path existing is insufficient: hashes, bytes when published, manifest validation, exact decoder position, and native shape must pass.
 
-A second authorized historical discovery folder is https://drive.google.com/drive/folders/1kFVI2KfZ7JmRKXoLFEuzEZ42chu47bV2 (ID `1kFVI2KfZ7JmRKXoLFEuzEZ42chu47bV2`). Deduplicate by source-video identity, capture group, byte size, and SHA-256 before combining it with NewDJI28.
+## Motion and cache data
 
-## Legacy and public-domain assets
+The fourth channel is raw numerical compensated difference normalized by 255. Invalid warp pixels are zero. Boundary/ineligible rows and compensation failures use D=0 with an explicit reason; RGB decode failure is fatal. The cache is derived, bounded, atomic, and disposable. It does not replace source verification.
 
-The full source-training planning inventory contains **107,561** rows across 53 videos: **105,957 ARD100** rows and **1,604 DJI** rows. The inventory marks 107,032 rows positive and 529 as certified negative; verify those annotation semantics during T02. Adding all 6,956 eligible NewDJI28 training rows gives a planning total of **114,517**. Recompute this total from the fresh manifest after deduplication, boundary checks, and label review; it is not a fixed quota or a completed-training count.
+## Weight provenance
 
-`legacy_video_inventory.csv` identifies the exact 67 legacy videos previously selected: 53 training videos and a 14-video source-validation candidate pool, totaling **18,819,068,978 bytes** before any content deduplication. The legacy training planning count is **107,561** records and must be re-audited when fresh manifests are generated. Rebuild validation from all audited eligible frames in the 14-video pool. Inventory paths are portable logical external-asset paths.
-
-Additional portable logical roots may be mounted as:
-
-- `external_assets/public/ARD100` (correct dataset name: ARD100)
-- `external_assets/public/Anti-UAV300`
-- `external_assets/public/Drone-detection-dataset`
-- `external_assets/public/AOT_train_adapt_pool_v2`
-- `external_assets/public/TransVisDrone_NPS`
-- `external_assets/public/TriCross-D2D`
-
-These datasets were used during prior development and must not be described as untouched independent test sets. Preserve their licenses, original annotations, class mappings, and official split files in the separately delivered asset package. A small prepared cross-domain subset cannot substitute for a complete benchmark.
-
-## Leakage controls for the fresh experiment
-
-1. Freeze split membership by capture group or original video before extracting frames, flow, residuals, crops, tiles, pseudo-masks, or augmentations.
-2. Keep every derivative of a source video in the same split.
-3. Use `(dataset, capture_group, source_video_id)` as the preferred split key, and assert that source-video IDs do not overlap across train, validation, and test.
-4. Use validation only under a predeclared selection policy. Do not use test labels to tune thresholds, epochs, prompts, motion methods, or hard-case selection.
-5. Establish a new run contract with fixed code revision, official pretrained initialization, seeds, manifest hashes, update budget, image size, optimizer, thresholds, and evaluation manifests.
-6. Start every new model from the official generic pretrained weights listed in `weights_inventory.csv`, and record those exact initialization identities.
-
-## Receipt checklist
-
-Before materialization or training:
-
-- obtain the separately delivered authorized asset package;
-- verify `annotations_2607.zip` against its byte count and SHA-256;
-- verify every raw video byte count and every available SHA-256 in both video inventories;
-- confirm that all manifest paths resolve relative to the configured logical roots;
-- audit split disjointness at source-video level;
-- record any unavailable Drive object as unavailable on the receipt date rather than rewriting the 2026-10-11 snapshot;
-- keep access tokens, cookies, credentials, and private sharing URLs out of logs and Git.
-
-`experiment_config.template.yaml` is a labeled specification template. It is non-executable until the T00/T04 adapter validates and maps it into the actual training entry points. Do not launch a GPU job from the template alone.
+Use one identical official YOLO11m initialization for both detector arms, official SAM 2.1 Large as pseudo-mask teacher, and official SAM 2.1 Tiny as the adapted student. Verify the weight receipt and SAM source commit before training. Never publish credentials, private source paths, or unlicensed source archives.

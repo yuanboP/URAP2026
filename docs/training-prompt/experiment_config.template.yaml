@@ -1,7 +1,7 @@
 # Fresh experiment specification; not an executable trainer configuration.
 # T00/T04 implement and validate the adapter. Paths are examples to resolve locally.
 project: urap_drone_detection_fresh
-schema_status: pending_T00_T04_adapter
+schema_status: research_specification_use_drone_training_cli_for_execution
 
 runtime:
   device: cuda
@@ -32,7 +32,7 @@ models:
   motion_input_definition: compensated_symmetric_grayscale_residual_D_div_255
   added_stem_channel_initialization: zero
   sam_trainable_components: [sam_mask_decoder]
-  candidate_detection_head: pending_T08
+  candidate_detection_head: optional_implemented_training_and_evaluation_required
 
 motion:
   grid_cols: 36
